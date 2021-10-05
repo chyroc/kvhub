@@ -10,7 +10,7 @@ import (
 func Test_github(t *testing.T) {
 	as := assert.New(t)
 	token := os.Getenv("GITHUB_TOKEN")
-	repo := "chyroc/data-store" // os.Getenv("REPO")
+	repo := os.Getenv("REPO")
 
 	t.Run("", func(t *testing.T) {
 		res, err := githubGetFile(repo, token, "fake/1.txt")
