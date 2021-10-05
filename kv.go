@@ -1,6 +1,8 @@
 package kvhub
 
 import (
+	"errors"
+
 	"github.com/chyroc/kvhub/internal"
 )
 
@@ -18,10 +20,22 @@ func New(repo, token, scope string) *Hub {
 	}
 }
 
+var ErrNotFound = errors.New("not found")
+
 func (r *Hub) Get(key string) ([]byte, error) {
-	return internal.Get(r.repo, r.token, r.scope, key)
+	res, err := internal.Get(r.repo, r.token, r.scope, key)
+	if err != nil {
+		if errors.Is(err, internal.ErrNotFound) {
+			return nil, ErrNotFound
+		}
+	}
+	return res, err
 }
 
 func (r *Hub) Set(key string, val []byte) error {
-	return internal.Set(r.repo, r.token, r.scope, key, val)
+	err := internal.Set(r.repo, r.token, r.scope, key, val)
+	if errors.Is(err, internal.ErrNotFound) {
+		return ErrNotFound
+	}
+	return err
 }

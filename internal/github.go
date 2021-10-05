@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var ErrNotFound = fmt.Errorf("not found")
+
 func githubUploadFile(repo, token, path string, content []byte) error {
 	sha := getSHA(repo, token, path)
 	var body io.Reader
@@ -70,6 +72,15 @@ func githubDoRequest(method, url string, body io.Reader, token string) ([]byte, 
 	}
 
 	if resp.StatusCode >= 300 {
+		var res struct {
+			Message string `json:"message"`
+		}
+		if _ = json.Unmarshal(bs, &res); res.Message != "" {
+			if resp.StatusCode == 404 && res.Message == "Not Found" {
+				return nil, ErrNotFound
+			}
+			return nil, fmt.Errorf("[github] %s %s fail, code=%d, res=%s", method, url, resp.StatusCode, res.Message)
+		}
 		return nil, fmt.Errorf("[github] %s %s fail, code=%d, res=%s", method, url, resp.StatusCode, bs)
 	}
 
